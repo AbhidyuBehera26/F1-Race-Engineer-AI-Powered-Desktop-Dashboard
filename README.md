@@ -1,4 +1,4 @@
-# 🏎️ F1 Race Engineer — AI-Powered Desktop Dashboard
+# F1 Race Engineer — AI-Powered Desktop Dashboard
 
 > AI-powered F1 Race Engineer desktop dashboard. Built with PyQt6 and local Llama 3.1 via Ollama — no cloud, no cost, no latency. AI chat uses live weather tool-calling and local knowledge base search to deliver real engineering data. Renders real 2024 Belgian GP telemetry via FastF1 and Matplotlib. Fully Dockerised stack with OpenAI GPT-4o fallback.
 
@@ -10,26 +10,26 @@
 
 ---
 
-## 📸 Overview
+## Overview
 
 A professional desktop application that replaces a Jupyter/Colab notebook with a native **PyQt6 dashboard**. The left panel hosts an AI chat powered by **Llama 3.1 running locally via Ollama**. The right panel renders real **2024 Belgian GP telemetry** fetched via FastF1 and plotted with Matplotlib — no external sandbox, no latency.
 
 ```
 ┌──────────────────────────┬──────────────────────────────────┐
-│  🏎 CHIEF RACE ENGINEER  │  📊 LIVE TELEMETRY               │
+│     CHIEF RACE ENGINEER  │  LIVE TELEMETRY                  │
 │                          │                                  │
 │  AI Chat Interface       │  Speed / Throttle / Brake        │
 │  • Live weather API      │  2024 Belgian GP — Fastest Lap   │
 │  • Knowledge base search │                                  │
-│  • Tool-calling loop     │  [🔄 Refresh]                    │
+│  • Tool-calling loop     │  [Refresh]                       │
 │                          │                                  │
-│  [ Type message... ] [▶] │                                  │
+│  [ Type message... ]     │                                  │
 └──────────────────────────┴──────────────────────────────────┘
 ```
 
 ---
 
-## ✨ Features
+## Features
 
 - **Local LLM** — Llama 3.1 8B runs entirely on your GPU via Ollama. No API key, no internet after model download.
 - **Tool-calling loop** — AI fetches live track weather (Open-Meteo) and searches a local F1 knowledge base before answering.
@@ -40,7 +40,7 @@ A professional desktop application that replaces a Jupyter/Colab notebook with a
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 |---|---|
@@ -54,7 +54,7 @@ A professional desktop application that replaces a Jupyter/Colab notebook with a
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Python 3.11+
@@ -93,7 +93,7 @@ If you prefer GPT-4o instead of running Ollama locally:
 2. Paste your OpenAI API key inside it
 3. Run the app without starting Ollama — it detects automatically
 
-> ⚠️ `openAI_key.txt` is listed in `.gitignore` and will never be committed to GitHub.
+> `openAI_key.txt` is listed in `.gitignore` and will never be committed to GitHub.
 
 ---
 
@@ -116,7 +116,7 @@ Docker Compose will:
 
 ---
 
-## 📁 Project Structure
+## roject Structure
 
 ```
 ├── run.py                    ← Entry point: python run.py
@@ -139,7 +139,7 @@ Docker Compose will:
 
 ---
 
-## 💬 Example Queries
+## Example Queries
 
 | Query | What the AI does |
 |---|---|
