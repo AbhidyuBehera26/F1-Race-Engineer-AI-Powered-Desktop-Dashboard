@@ -85,7 +85,7 @@ python run.py
 
 ---
 
-## 🔄 OpenAI Fallback
+## penAI Fallback
 
 If you prefer GPT-4o instead of running Ollama locally:
 
@@ -97,7 +97,7 @@ If you prefer GPT-4o instead of running Ollama locally:
 
 ---
 
-## 🐳 Docker Deployment
+## Docker Deployment
 
 ```bash
 # Start both containers (app + Ollama LLM server)
@@ -116,7 +116,7 @@ Docker Compose will:
 
 ---
 
-## roject Structure
+## Project Structure
 
 ```
 ├── run.py                    ← Entry point: python run.py
