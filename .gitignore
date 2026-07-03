@@ -1,0 +1,32 @@
+# ── Python bytecode ──────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# ── Virtual environments ──────────────────────────────────────────────────────
+venv/
+.venv/
+env/
+
+# ── Sensitive files — NEVER commit these ─────────────────────────────────────
+openAI_key.txt
+*.env
+.env
+
+# ── FastF1 data cache (20MB+, auto-regenerated on first run) ─────────────────
+f1_cache/
+
+# ── Auto-generated graph (recreated every time you click Refresh) ────────────
+app/telemetry_graph.png
+
+# ── IDE / OS ──────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db

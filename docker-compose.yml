@@ -1,0 +1,83 @@
+# ── Docker Compose — Multi-Container Orchestration ───────────────────────────
+#
+# docker-compose.yml defines an entire application stack as "services."
+# Each service is a container. They share a private network and can communicate
+# by service name (e.g., the app talks to ollama by hostname "ollama").
+#
+# Run the whole stack with: docker-compose up
+# Stop everything with:     docker-compose down
+#
+# Why two containers?
+# Separation of concerns — the Ollama LLM server is an independent service.
+# If you want to update the app without redownloading 5GB of model weights,
+# you just rebuild the 'app' image. The 'ollama' service stays unchanged.
+
+version: '3.8'
+
+services:
+
+  # ── Service 1: Ollama LLM Server ──────────────────────────────────────────
+  # This runs the local Llama 3.1 model as an API server.
+  # We use the official Ollama image from Docker Hub.
+  ollama:
+    image: ollama/ollama:latest
+    container_name: f1_ollama
+    ports:
+      # Map host port 11434 → container port 11434
+      # Syntax: "HOST_PORT:CONTAINER_PORT"
+      - "11434:11434"
+    volumes:
+      # Named volume: persists downloaded model weights between container restarts
+      # Without this, you'd re-download 5GB every time you restart.
+      # Format: named_volume_name:/path/inside/container
+      - ollama_models:/root/.ollama
+    # GPU support (uncomment if using Docker Desktop with GPU support):
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+    healthcheck:
+      # Docker pings this command to check if ollama is ready.
+      # The 'app' service waits for this to succeed before starting.
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s  # Give ollama time to start before checking
+
+  # ── Service 2: F1 Race Engineer App ───────────────────────────────────────
+  app:
+    # 'build: .' tells compose to build an image from the Dockerfile in this directory
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: f1_race_engineer
+    depends_on:
+      # Don't start the app until ollama is healthy
+      ollama:
+        condition: service_healthy
+    environment:
+      # X11 display forwarding — connects to the host's display server
+      # On Linux: set DISPLAY in your shell first (usually :0)
+      - DISPLAY=${DISPLAY:-:99}
+      # Tell the app where to find Ollama — use the service name, not localhost
+      # Docker's internal network resolves "ollama" to the ollama container's IP
+      - OLLAMA_HOST=http://ollama:11434
+    volumes:
+      # X11 socket — required for the container to render a window on your screen
+      # (Linux only — Windows needs VcXsrv or WSL2 + X server)
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      # Persist FastF1 telemetry cache (avoids re-downloading 50MB each restart)
+      - f1_cache:/app/f1_cache
+    # Automatically restart unless manually stopped
+    restart: unless-stopped
+
+# ── Named Volumes ─────────────────────────────────────────────────────────────
+# Docker-managed storage that persists beyond container lifetimes.
+# These are declared at the top level and referenced by services above.
+volumes:
+  ollama_models:   # Stores Llama 3.1 model weights (~5GB)
+  f1_cache:        # Stores FastF1 session data cache (~50MB)

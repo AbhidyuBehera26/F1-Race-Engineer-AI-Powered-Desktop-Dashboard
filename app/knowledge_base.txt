@@ -1,0 +1,80 @@
+# F1 Race Engineering Reference — Tyre, Aero, and Setup Guide
+
+## Pirelli Tyre Compounds (2024 Season)
+
+| Compound  | Optimal Track Temp | Tyre Life   | When to use |
+|-----------|--------------------|-------------|-------------|
+| Soft C5   | 30–45 C            | Short        | Qualifying, <20 lap stints |
+| Medium C3 | 35–55 C            | Medium       | 25–35 lap race stints |
+| Hard C2   | 40–65 C            | Long         | 35–50 laps, undercut defence |
+| Inter     | Damp/drying        | Medium       | 30 litres/sec water clearance |
+| Full Wet  | Standing water     | Short        | 65 litres/sec water clearance |
+
+## Starting Tyre Pressures (PSI, Pirelli minimums)
+- Soft:   Front 24.0 PSI, Rear 21.5 PSI
+- Medium: Front 23.0 PSI, Rear 20.5 PSI
+- Hard:   Front 22.0 PSI, Rear 19.5 PSI
+
+## Temperature Corrections for Tyre Pressure
+- Track surface below 30 C: add 1.5 to 2.0 PSI, set blankets to 100 C
+- Track surface 30 to 40 C: add 0.5 to 1.0 PSI
+- Track surface 40 to 50 C: use baseline pressures above
+- Track surface above 55 C: reduce 0.3 PSI for every 5 C above 50
+- General rule: every 5 C change in track temp = 0.5 PSI adjustment
+
+## Aerodynamic Setup
+- Monaco / Hungary (high downforce): rear wing 14 to 18 degrees, accept drag penalty
+- Silverstone / Bahrain (medium): rear wing 8 to 12 degrees
+- Spa / Monza (low drag): rear wing 2 to 6 degrees, DRS worth 0.4 to 0.7 s per straight
+- Raising front wing increases downforce and reduces understeer
+- Lowering front wing reduces drag but increases understeer
+
+## Brake Setup
+- Baseline brake balance: 57 to 60 percent front
+- High-speed heavy braking circuits (Monza Turn 1, Ascari): 60 to 62 percent front
+- Slow technical circuits (Monaco): 55 to 57 percent front
+- Shift balance 1 to 2 percent rearward every 10 laps as tyres heat up
+
+## Suspension
+- Front ride height: 20 to 40 mm (lower is faster, risks grounding)
+- Rear ride height: 55 to 80 mm (aerodynamic rake generates downforce)
+- Stiff springs above 50 N/mm: smooth tracks like Barcelona, Abu Dhabi
+- Soft springs below 35 N/mm: bumpy tracks like Bahrain, Spa Sector 2
+- Stiffer front anti-roll bar: less understeer
+- Stiffer rear anti-roll bar: more oversteer tendency
+
+## Spa-Francorchamps Circuit Notes
+- Very high speed, big elevation changes, weather changes rapidly — often raining in Sector 2 but dry at the start
+- Eau Rouge / Raidillon: flat out in dry conditions in modern F1
+- Bus Stop chicane: heaviest braking point, brake board at 100m from 300+ km/h
+- La Source hairpin: brake at 80m board, trail brake into apex
+- Pouhon: high-speed double left, very aero sensitive
+- Recommended tyre allocation: C3 / C4 / C5
+- Always have intermediates prepared by lap 15 in changeable conditions
+- DRS on Kemmel Straight worth approximately 0.5 s
+
+## Silverstone Notes
+- Very smooth surface, rear tyre thermal deg is the main concern
+- Copse corner: flat in dry, 280+ km/h
+- Maggotts-Becketts-Chapel: hardest complex in F1, rear stability critical
+- Monitor rear deg delta from lap 10 onwards
+- DRS zones: Hangar Straight and Wellington Straight
+
+## Monza Notes
+- Lowest downforce circuit on the calendar
+- Use 2 to 4 degree rear wing — anything more costs 0.3 s per straight
+- Tyre deg is very low — 1-stop Medium-Hard strategy is standard
+- Slipstreaming affects lap times significantly — qualifying position matters a lot
+
+## Reading Telemetry
+- Braking too early: throttle opens before minimum speed, understeer through apex
+- Braking too late: lock-up visible as spike in brake trace, car runs wide
+- Good braking: progressive pressure increase, smooth speed curve, clean apex
+- Mid-corner throttle lift and reapply: sign of rear instability or driver lack of confidence
+- Entry speed more than 15 km/h below reference: braking too early
+- Entry speed more than 15 km/h above reference: likely lock-up or missed apex
+
+## Race Strategy Basics
+- Undercut works when the gap to the car ahead is less than 20 s (pit loss ~20 s at Spa)
+- Always pit under safety car if it's between lap 10 and lap 50 of a 70-lap race
+- Optimal stint length = target lap delta / tyre deg per lap (e.g. 1.5 s / 0.05 s/lap = 30 laps)
