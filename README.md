@@ -150,6 +150,3 @@ Docker Compose will:
 
 ---
 
-## 📄 License
-
-MIT License — free to use, modify, and distribute.
