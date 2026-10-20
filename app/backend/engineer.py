@@ -14,7 +14,11 @@ SYSTEM_PROMPT = """You are an F1 Race Engineering Assistant specializing in vehi
 
 Rules:
 1. For tyre, pressure, or setup questions, call search_knowledge_base(query) to retrieve circuit-specific notes.
-2. Quote ONLY the specific tyre compounds and starting pressures listed in the notes. If the notes state that tyre allocations or pressures are not documented for a circuit, repeat that exact notice without inventing figures.
+2. When answering tyre questions:
+   - Always state the track surface temperature and whether cold-track adjustment applies.
+   - List ALL nominated tyre compounds (e.g. Hard C2, Medium C3, Soft C4) without selecting or recommending only one compound unless specifically asked for race strategy.
+   - Explicitly state that any pressure adjustment is a general engineering rule of thumb, NOT Pirelli's official baseline.
+   - If the notes state that tyre allocations or pressures are not documented for a circuit, repeat that exact notice without inventing figures.
 3. For aero, brake balance, suspension, and strategy questions, quote the exact values from the notes.
 4. Keep responses concise and format numerical data clearly with bullet points."""
 
@@ -26,7 +30,7 @@ TOOLS = [
             "name": "get_track_weather",
             "description": (
                 "Gets current live weather at a motorsport circuit: air temp, track surface temp, "
-                "rain, wind speed, humidity. Call this before ANY tyre or setup recommendation."
+                "rain, wind speed, humidity."
             ),
             "parameters": {
                 "type": "object",
@@ -46,7 +50,7 @@ TOOLS = [
             "name": "search_knowledge_base",
             "description": (
                 "Searches the F1 engineering knowledge base for tyre compounds, pressures, "
-                "aerodynamic settings, brake balance, suspension, and circuit notes."
+                "aerodynamic settings, brake balance, suspension, and circuit notes. Call this first for all setup, aero, and tyre queries."
             ),
             "parameters": {
                 "type": "object",
@@ -93,42 +97,56 @@ def _has_tyre_data(section: str) -> bool:
     low = section.lower()
     return ('recommended tyre' in low) or ('starting pressures' in low)
 
-def _build_spa_tyre_response() -> str:
-    # 1. Fetch live weather directly in Python so 8B model doesn't need to chain tools
-    track_temp = None
+def _build_spa_tyre_response(track_temp_override: float | None = None) -> str:
+    # Fetch live weather directly in Python so 8B model doesn't need to chain tools
+    track_temp = track_temp_override
     weather_desc = "Live weather data unavailable"
-    try:
-        w_data = json.loads(get_track_weather('spa'))
-        if 'track_surface_temp_c' in w_data:
-            track_temp = w_data['track_surface_temp_c']
-            air_temp = w_data.get('air_temp_c', 'N/A')
-            cond = w_data.get('conditions', 'DRY')
-            weather_desc = f"Air {air_temp} deg C, Track surface {track_temp} deg C, Conditions: {cond}"
-    except Exception:
-        pass
+    if track_temp is None:
+        try:
+            print("[Live Weather] Fetching live weather for Spa via Open-Meteo...")
+            w_data = json.loads(get_track_weather('spa'))
+            if 'track_surface_temp_c' in w_data:
+                track_temp = w_data['track_surface_temp_c']
+                air_temp = w_data.get('air_temp_c', 'N/A')
+                cond = w_data.get('conditions', 'DRY')
+                weather_desc = f"Air {air_temp} deg C, Track surface {track_temp} deg C, Conditions: {cond}"
+                print(f"[Live Weather] Spa Track Surface Temp: {track_temp} deg C")
+        except Exception as e:
+            print(f"[Live Weather] Error: {e}")
+    else:
+        weather_desc = f"Simulated track surface {track_temp:.1f} deg C"
 
-    # 2. Baseline Pirelli starting pressures
+    # Baseline Pirelli starting pressures
     base_front = 26.0
     base_rear = 24.5
 
-    # 3. Deterministic Python temperature correction
-    if track_temp is not None and track_temp < 30.0:
-        f_low = base_front + 1.5
-        f_high = base_front + 2.0
-        r_low = base_rear + 1.5
-        r_high = base_rear + 2.0
-        adj_text = (
-            f"\n- Track surface is cold ({track_temp} deg C < 30 deg C). Cold-track correction (+1.5 to +2.0 PSI rule of thumb applied):\n"
-            f"  - Recommended Adjusted Pressures: Front {f_low:.1f} to {f_high:.1f} PSI, Rear {r_low:.1f} to {r_high:.1f} PSI"
-        )
+    # Deterministic Python temperature correction
+    if track_temp is not None:
+        if track_temp < 30.0:
+            f_low = base_front + 1.5
+            f_high = base_front + 2.0
+            r_low = base_rear + 1.5
+            r_high = base_rear + 2.0
+            adj_text = (
+                f"- Live Track Surface Temperature: {track_temp:.1f} deg C (Cold track < 30.0 deg C)\n"
+                f"- Rule of Thumb Correction (engineering heuristic, NOT Pirelli): add +1.5 to +2.0 PSI for cold track\n"
+                f"- Recommended Adjusted Pressures: Front {f_low:.1f} to {f_high:.1f} PSI, Rear {r_low:.1f} to {r_high:.1f} PSI"
+            )
+        else:
+            adj_text = (
+                f"- Live Track Surface Temperature: {track_temp:.1f} deg C (Warm track >= 30.0 deg C)\n"
+                f"- Rule of Thumb Correction: OFF (surface temp >= 30.0 deg C). Mandatory baseline minimums apply: Front {base_front:.1f} PSI, Rear {base_rear:.1f} PSI"
+            )
     else:
-        adj_text = f"\n- Track surface temperature ({track_temp} deg C) is warm (>= 30 deg C). Baseline minimums apply."
+        adj_text = (
+            f"- Live Track Surface Temperature: Unavailable\n"
+            f"- Mandatory baseline minimums apply: Front {base_front:.1f} PSI, Rear {base_rear:.1f} PSI"
+        )
 
     return (
         "## Spa-Francorchamps Tyre Specification & Starting Pressures\n"
-        "- Nominated Compounds: Hard C2, Medium C3, Soft C4 (Pirelli 2024 nomination)\n"
+        "- Nominated Compounds: Hard C2, Medium C3, Soft C4 (Pirelli 2024 nomination. Note: all three are nominated; do not pick a single compound).\n"
         f"- Mandatory Baseline Minimum Starting Pressures: Front {base_front:.1f} PSI, Rear {base_rear:.1f} PSI\n"
-        f"- Live Weather: {weather_desc}"
         f"{adj_text}\n"
         "- Camber limits: Front -2.75 deg, Rear -1.50 deg\n"
         "- Note: All four wheels take the same compound; do not assign different compounds to front and rear axles."
@@ -313,6 +331,17 @@ def get_ai_response(message: str, history: list, status_callback=None) -> tuple[
                 print("tool:", tool_name, tool_args)
                 tool_result = _dispatch_tool(tool_name, tool_args, status_callback)
                 
+                # Deterministic check: if circuit tyres are not documented, return notice directly
+                if tool_result.startswith("NOTE: No tyre compound allocation or starting pressures are documented for"):
+                    clean_msg = tool_result.replace("NOTE: ", "").strip()
+                    print(f"Deterministic circuit guard triggered: {clean_msg}")
+                    return clean_msg, backend_label
+
+                # Deterministic Spa tyre response: preserve exact track temp, rule of thumb disclaimer & all compounds
+                if tool_result.startswith("## Spa-Francorchamps Tyre Specification"):
+                    print("Deterministic Spa tyre response returned.")
+                    return tool_result, backend_label
+
                 messages.append({
                     "role": "tool",
                     "tool_call_id": tc.id,
