@@ -76,16 +76,16 @@ class TelemetryThread(QThread):
             })
             return df, driver, lap_time
         except Exception as e:
-            print(f"FastF1 live server unavailable ({e}). Checking authentic local telemetry cache...")
+            print(f"FastF1 live server unavailable ({e}). Checking local telemetry cache...")
 
-        # 2. Load authentic real session telemetry cache (386 raw sensor samples from Perez Lap 44)
+        # 2. Load cached session telemetry (386 raw sensor samples from Perez Lap 44)
         csv_path = Path(__file__).parent / 'perez_lap44_telemetry.csv'
         if csv_path.exists():
             df = pd.read_csv(csv_path)
             return df, 'S. Perez (Red Bull)', '1:44.701'
 
-        # 3. No silent fake fallback — raise error if real data is missing
-        raise RuntimeError("No authentic telemetry available (live server unreachable and local cache missing).")
+        # 3. Raise error if real session data cannot be loaded
+        raise RuntimeError("No telemetry data available (live server unreachable and local cache missing).")
 
     def _render_chart(self, df: pd.DataFrame, driver: str, lap_time: str):
         mplstyle.use('dark_background')

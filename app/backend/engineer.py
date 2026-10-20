@@ -9,7 +9,7 @@ from app.backend.weather import get_track_weather
 # File path for the knowledge base
 KB_PATH = Path(__file__).parent.parent / 'knowledge_base.txt'
 
-# System prompt for the race engineer persona
+# System prompt for the race engineer assistant
 SYSTEM_PROMPT = """You are an F1 Race Engineering Assistant specializing in vehicle dynamics, strategy, and tyre management. You provide precise, quantified technical recommendations grounded strictly in verified setup notes and live track conditions.
 
 Rules:
@@ -146,7 +146,7 @@ def search_knowledge_base(query: str) -> str:
 
     target_circuit = _extract_target_circuit(query_lower)
 
-    # Circuit-specific guard: if a known circuit is in the query, strictly isolate to that circuit
+    # If a specific circuit is in the query, restrict search to that circuit's notes
     if target_circuit:
         circuit_section = _find_circuit_section(target_circuit, sections)
         
@@ -160,15 +160,15 @@ def search_knowledge_base(query: str) -> str:
 
         # If the circuit section lacks tyre data (e.g. Monza, Silverstone)
         if not _has_tyre_data(circuit_section):
-            guard_note = (
+            notice = (
                 f"\n\nNOTE: No tyre compound allocation or starting pressures are documented for "
-                f"{target_circuit.capitalize()}. Do not invent or guess figures."
+                f"{target_circuit.capitalize()}."
             )
-            # If the user specifically asks about tyres, return only the guard note
+            # If the user specifically asks about tyres, return only the notice
             if _is_tyre_query(query_lower):
-                return guard_note.strip()
-            # If asking about aero/setup, return the section with the guard note attached
-            return circuit_section + guard_note
+                return notice.strip()
+            # If asking about aero/setup, return the section with the notice attached
+            return circuit_section + notice
 
         return circuit_section
 
