@@ -2,12 +2,6 @@
 
 A desktop application for Formula 1 telemetry visualization and race engineering debriefs. Built with Python, PyQt6, FastF1, Matplotlib, and an offline local LLM via Ollama (Llama 3.1 8B).
 
-![Python](https://img.shields.io/badge/Python-3.11+-blue?style=flat-square&logo=python)
-![PyQt6](https://img.shields.io/badge/PyQt6-6.6+-green?style=flat-square)
-![Ollama](https://img.shields.io/badge/Ollama-Llama_3.1-orange?style=flat-square)
-![FastF1](https://img.shields.io/badge/Data-FastF1%20%26%20OpenF1-red?style=flat-square)
-![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)
-
 ---
 
 ## Features
@@ -152,9 +146,3 @@ If you want to use OpenAI instead of running Ollama locally:
 - **"Best aero for Monza?"** — Returns low-drag rear wing recommendations (2° to 4° angle).
 - **"Analyse the brake zones"** — Explains the braking points on the telemetry plot, including the Bus Stop chicane and La Source.
 - **"Tyres for Monza?"** — Indicates that tyre allocations for Monza are not documented in the local reference notes.
-
----
-
-## License
-
-Distributed under the MIT License. See `LICENSE` for more information.
