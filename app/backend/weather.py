@@ -1,7 +1,6 @@
 import json
 import requests
 
-# Dictionary of track coordinates to look up for weather forecasting
 TRACK_COORDS = {
     'silverstone': {'lat': 52.0786, 'lon': -1.0169},
     'spa':         {'lat': 50.4372, 'lon':  5.9714},
@@ -17,12 +16,8 @@ TRACK_COORDS = {
 
 
 def get_track_weather(track_name: str) -> str:
-    # Look up the weather for the given F1 circuit using the Open-Meteo API
-    
-    # Normalize input
     key = track_name.lower().replace(' ', '').replace('-', '')
     
-    # Match the input with our keys
     matched = None
     for k in TRACK_COORDS:
         if k in key or key in k:
@@ -34,11 +29,9 @@ def get_track_weather(track_name: str) -> str:
             'error': f"Unknown circuit '{track_name}'. Known: {list(TRACK_COORDS)}"
         })
 
-    # Get coordinates
     lat = TRACK_COORDS[matched]['lat']
     lon = TRACK_COORDS[matched]['lon']
     
-    # URL query for Open-Meteo API
     url = (
         f'https://api.open-meteo.com/v1/forecast'
         f'?latitude={lat}&longitude={lon}'
@@ -48,11 +41,7 @@ def get_track_weather(track_name: str) -> str:
     try:
         r = requests.get(url, timeout=10)
         data = r.json()['current']
-        
-        # Check if there is rain
-        is_wet = 'DRY'
-        if data['rain'] > 0:
-            is_wet = 'WET'
+        is_wet = 'WET' if data['rain'] > 0 else 'DRY'
             
         return json.dumps({
             'circuit':              matched,

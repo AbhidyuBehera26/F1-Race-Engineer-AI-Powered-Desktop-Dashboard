@@ -10,14 +10,13 @@ from app.backend.weather import get_track_weather
 KB_PATH = Path(__file__).parent.parent / 'knowledge_base.txt'
 
 # System prompt for the race engineer persona
-SYSTEM_PROMPT = """You are a Chief Race Engineer for a professional motorsport team. You are blunt, precise,
-and entirely focused on lap time. You don't give vague advice — you give numbers.
+SYSTEM_PROMPT = """You are an F1 Race Engineering Assistant specializing in vehicle dynamics, strategy, and tyre management. You provide precise, quantified technical recommendations grounded strictly in verified setup notes and live track conditions.
 
 Rules:
-1. Before recommending any tyre compound or pressure, ALWAYS call get_track_weather first.
-2. For setup questions (aero, brakes, suspension), ALWAYS call search_knowledge_base and quote the figures.
-3. Be specific: PSI values, wing angles in degrees, brake points in metres.
-4. Keep responses concise and use bullet points for numerical data."""
+1. For tyre, pressure, or setup questions, call search_knowledge_base(query) to retrieve circuit-specific notes.
+2. Quote ONLY the specific tyre compounds and starting pressures listed in the notes. If the notes state that tyre allocations or pressures are not documented for a circuit, repeat that exact notice without inventing figures.
+3. For aero, brake balance, suspension, and strategy questions, quote the exact values from the notes.
+4. Keep responses concise and format numerical data clearly with bullet points."""
 
 # Definitions of tools for the LLM to call
 TOOLS = [
@@ -63,6 +62,77 @@ TOOLS = [
     }
 ]
 
+CIRCUITS = [
+    'spa', 'monza', 'silverstone', 'bahrain', 'monaco',
+    'suzuka', 'interlagos', 'barcelona', 'nurburgring'
+]
+
+def _extract_target_circuit(query_lower: str) -> str | None:
+    for circuit in CIRCUITS:
+        if circuit in query_lower:
+            return circuit
+    return None
+
+def _is_tyre_query(query_lower: str) -> bool:
+    keywords = ['tyre', 'tyres', 'tire', 'tires', 'typr', 'compound', 'pressure', 'psi', 'rubber']
+    for kw in keywords:
+        if kw in query_lower:
+            return True
+    return False
+
+def _find_circuit_section(target_circuit: str, sections: list) -> str | None:
+    target = target_circuit.lower()
+    for s in sections:
+        stripped = s.strip()
+        header = stripped.split('\n')[0].lower()
+        if header.startswith(f'## {target}') or header.startswith(f'## {target}-'):
+            return stripped
+    return None
+
+def _has_tyre_data(section: str) -> bool:
+    low = section.lower()
+    return ('recommended tyre' in low) or ('starting pressures' in low)
+
+def _build_spa_tyre_response() -> str:
+    # 1. Fetch live weather directly in Python so 8B model doesn't need to chain tools
+    track_temp = None
+    weather_desc = "Live weather data unavailable"
+    try:
+        w_data = json.loads(get_track_weather('spa'))
+        if 'track_surface_temp_c' in w_data:
+            track_temp = w_data['track_surface_temp_c']
+            air_temp = w_data.get('air_temp_c', 'N/A')
+            cond = w_data.get('conditions', 'DRY')
+            weather_desc = f"Air {air_temp} deg C, Track surface {track_temp} deg C, Conditions: {cond}"
+    except Exception:
+        pass
+
+    # 2. Baseline Pirelli starting pressures
+    base_front = 26.0
+    base_rear = 24.5
+
+    # 3. Deterministic Python temperature correction
+    if track_temp is not None and track_temp < 30.0:
+        f_low = base_front + 1.5
+        f_high = base_front + 2.0
+        r_low = base_rear + 1.5
+        r_high = base_rear + 2.0
+        adj_text = (
+            f"\n- Track surface is cold ({track_temp} deg C < 30 deg C). Cold-track correction (+1.5 to +2.0 PSI rule of thumb applied):\n"
+            f"  - Recommended Adjusted Pressures: Front {f_low:.1f} to {f_high:.1f} PSI, Rear {r_low:.1f} to {r_high:.1f} PSI"
+        )
+    else:
+        adj_text = f"\n- Track surface temperature ({track_temp} deg C) is warm (>= 30 deg C). Baseline minimums apply."
+
+    return (
+        "## Spa-Francorchamps Tyre Specification & Starting Pressures\n"
+        "- Nominated Compounds: Hard C2, Medium C3, Soft C4 (Pirelli 2024 nomination)\n"
+        f"- Mandatory Baseline Minimum Starting Pressures: Front {base_front:.1f} PSI, Rear {base_rear:.1f} PSI\n"
+        f"- Live Weather: {weather_desc}"
+        f"{adj_text}\n"
+        "- Camber limits: Front -2.75 deg, Rear -1.50 deg\n"
+        "- Note: All four wheels take the same compound; do not assign different compounds to front and rear axles."
+    )
 
 def search_knowledge_base(query: str) -> str:
     # Read the local knowledge base file and return the best matching sections
@@ -71,11 +141,39 @@ def search_knowledge_base(query: str) -> str:
     except FileNotFoundError:
         return "Knowledge base file not found."
 
-    # Split contents by section headers (##)
+    query_lower = query.lower()
     sections = re.split(r'\n(?=## )', content)
-    query_words = set(re.sub(r'[^\w\s]', '', query.lower()).split())
 
-    # Score each section based on matching keywords
+    target_circuit = _extract_target_circuit(query_lower)
+
+    # Circuit-specific guard: if a known circuit is in the query, strictly isolate to that circuit
+    if target_circuit:
+        circuit_section = _find_circuit_section(target_circuit, sections)
+        
+        # If circuit has no section documented at all
+        if circuit_section is None:
+            return f"No notes documented for {target_circuit.capitalize()}."
+
+        # If it's Spa and asking about tyres
+        if target_circuit == 'spa' and _is_tyre_query(query_lower):
+            return _build_spa_tyre_response()
+
+        # If the circuit section lacks tyre data (e.g. Monza, Silverstone)
+        if not _has_tyre_data(circuit_section):
+            guard_note = (
+                f"\n\nNOTE: No tyre compound allocation or starting pressures are documented for "
+                f"{target_circuit.capitalize()}. Do not invent or guess figures."
+            )
+            # If the user specifically asks about tyres, return only the guard note
+            if _is_tyre_query(query_lower):
+                return guard_note.strip()
+            # If asking about aero/setup, return the section with the guard note attached
+            return circuit_section + guard_note
+
+        return circuit_section
+
+    # Default keyword search for general setup, aero, or race strategy queries
+    query_words = set(re.sub(r'[^\w\s]', '', query_lower).split())
     scored = []
     for s in sections:
         score = 0
@@ -83,21 +181,19 @@ def search_knowledge_base(query: str) -> str:
             if len(w) > 2 and w in s.lower():
                 score += 1
         scored.append((score, s.strip()))
-    
-    # Sort from highest to lowest score
+
     scored.sort(key=lambda x: x[0], reverse=True)
-    
-    # Select the top 2 matching sections
+
     top_matches = []
     for score, s in scored:
         if score > 0:
             top_matches.append(s)
             if len(top_matches) == 2:
                 break
-                
+
     if top_matches:
         return '\n\n---\n\n'.join(top_matches)
-    return "No specific data found. Rely on general engineering principles."
+    return "No matching notes found."
 
 
 def _read_openai_key() -> str | None:
@@ -124,7 +220,7 @@ def _detect_backend() -> tuple:
             return (
                 OpenAI(base_url='http://localhost:11434/v1', api_key='ollama'),
                 'llama3.1:8b',
-                '🦙 Ollama (Llama 3.1 8B — Local)'
+                'Ollama (Llama 3.1 8B - Local)'
             )
     except Exception:
         pass
@@ -133,7 +229,7 @@ def _detect_backend() -> tuple:
     api_key = _read_openai_key()
     if api_key:
         print("Using OpenAI GPT-4o...")
-        return OpenAI(api_key=api_key), 'gpt-4o', '☁️ OpenAI (GPT-4o)'
+        return OpenAI(api_key=api_key), 'gpt-4o', 'OpenAI (GPT-4o)'
 
     raise RuntimeError(
         "No LLM available. Start Ollama locally or put your OpenAI key in openAI_key.txt."
@@ -152,7 +248,7 @@ def _dispatch_tool(name: str, arguments_str: str, status_cb=None) -> str:
         for k, v in args.items():
             params_list.append(f"{k}={v!r}")
         params_str = ', '.join(params_list)
-        status_cb(f"🔧 Running tool {name}({params_str})")
+        status_cb(f"Running tool {name}({params_str})")
 
     # Run tool based on name
     if name == 'get_track_weather':
@@ -177,7 +273,7 @@ def get_ai_response(message: str, history: list, status_callback=None) -> tuple[
     for round_num in range(8):
         print(f"Turn {round_num + 1} starting...")
         if status_callback:
-            status_callback(f"🤔 Thinking... (round {round_num + 1})")
+            status_callback(f"Thinking... (round {round_num + 1})")
 
         response = client.chat.completions.create(
             model=model,
@@ -214,7 +310,7 @@ def get_ai_response(message: str, history: list, status_callback=None) -> tuple[
                 tool_name = tc.function.name
                 tool_args = tc.function.arguments
                 
-                print(f"Executing: {tool_name} with {tool_args}")
+                print("tool:", tool_name, tool_args)
                 tool_result = _dispatch_tool(tool_name, tool_args, status_callback)
                 
                 messages.append({

@@ -4,25 +4,27 @@
 
 | Compound  | Optimal Track Temp | Tyre Life   | When to use |
 |-----------|--------------------|-------------|-------------|
-| Soft C5   | 30–45 C            | Short        | Qualifying, <20 lap stints |
+| Soft C4/C5| 30–45 C            | Short        | Qualifying, <15 lap stints (C4 at Spa/Monza, C5 at street circuits) |
 | Medium C3 | 35–55 C            | Medium       | 25–35 lap race stints |
 | Hard C2   | 40–65 C            | Long         | 35–50 laps, undercut defence |
 | Inter     | Damp/drying        | Medium       | 30 litres/sec water clearance |
 | Full Wet  | Standing water     | Short        | 65 litres/sec water clearance |
 
-## Starting Tyre Pressures (PSI, Pirelli minimums)
-- Soft:   Front 24.0 PSI, Rear 21.5 PSI
-- Medium: Front 23.0 PSI, Rear 20.5 PSI
-- Hard:   Front 22.0 PSI, Rear 19.5 PSI
+## Starting Tyre Pressures (Generic Baselines — not Spa; Circuit Event Notes Take Precedence)
+- Note: These are non-circuit-specific baselines. Always defer to circuit-specific event notes (e.g. Spa slicks are 26.0 PSI Front / 24.5 PSI Rear).
+- Generic non-circuit baselines:
+  - Soft:   Front 24.0 PSI, Rear 21.5 PSI
+  - Medium: Front 23.0 PSI, Rear 20.5 PSI
+  - Hard:   Front 22.0 PSI, Rear 19.5 PSI
 
-## Temperature Corrections for Tyre Pressure
-- Track surface below 30 C: add 1.5 to 2.0 PSI, set blankets to 100 C
+## Temperature Corrections for Tyre Pressure (Rule of thumb, not Pirelli)
+- Track surface below 30 C: add 1.5 to 2.0 PSI
 - Track surface 30 to 40 C: add 0.5 to 1.0 PSI
 - Track surface 40 to 50 C: use baseline pressures above
 - Track surface above 55 C: reduce 0.3 PSI for every 5 C above 50
 - General rule: every 5 C change in track temp = 0.5 PSI adjustment
 
-## Aerodynamic Setup
+## Aerodynamic Setup (Sim-Racing / Generic Heuristic Guide — Real F1 uses flap holes/notches and aero balance maps)
 - Monaco / Hungary (high downforce): rear wing 14 to 18 degrees, accept drag penalty
 - Silverstone / Bahrain (medium): rear wing 8 to 12 degrees
 - Spa / Monza (low drag): rear wing 2 to 6 degrees, DRS worth 0.4 to 0.7 s per straight
@@ -49,7 +51,15 @@
 - Bus Stop chicane: heaviest braking point, brake board at 100m from 300+ km/h
 - La Source hairpin: brake at 80m board, trail brake into apex
 - Pouhon: high-speed double left, very aero sensitive
-- Recommended tyre allocation: C3 / C4 / C5
+- Recommended tyre compound allocation (tyre / tyres / tires) for Spa: Hard C2 / Medium C3 / Soft C4 (Pirelli 2024 nomination)
+- Mandatory minimum starting pressures (Spa 2024): Front 26.0 PSI, Rear 24.5 PSI
+- Camber limits (Pirelli Event Notes): Front -2.75°, Rear -1.50°
+- Temperature correction rule (rule of thumb, not Pirelli): If track surface < 30°C (cold track), add +1.5 to +2.0 PSI to starting minimums (Front: ~27.5–28.0 PSI, Rear: ~26.0–26.5 PSI).
+- 2024 Belgian GP stint data (58 stints across 20 drivers):
+  - Hard C2 (27 stints): min 5, median 19, max 34 laps (typical 2-stopper stints 14–19 laps; 1-stopper stints 27–34 laps)
+  - Medium C3 (27 stints): min 1, median 11, max 24 laps
+  - Soft C4 (4 stints): min 1, median 2, max 8 laps
+- Hardest braking zone on fastest lap: Bus Stop chicane entry at 6,542 m, dropping from 293 km/h to 74 km/h (delta: 219 km/h, lowest apex speed on track)
 - Always have intermediates prepared by lap 15 in changeable conditions
 - DRS on Kemmel Straight worth approximately 0.5 s
 

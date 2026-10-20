@@ -34,7 +34,7 @@ class TelemetryPanel(QWidget):
         title_col = QVBoxLayout()
         title_col.setSpacing(2)
 
-        title = QLabel('📊  LIVE TELEMETRY')
+        title = QLabel('📊  FASTEST LAP TELEMETRY')
         title.setFont(QFont('Segoe UI', 11, QFont.Weight.Bold))
         title.setObjectName('panel_title')
 
